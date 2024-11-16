@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import styles from './ConfirmacaoAluguelUsuario.module.css';
 import backIcon from './ic-left.svg'; // Caminho relativo ao arquivo do componente
@@ -20,23 +20,21 @@ const ConfirmacaoAluguelUsuario = () => {
     setSelectedOption(option);
   };
 
-  const handleDateChange = (dateType, value) => {
-    const formattedDate = value.replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3');
-    if (dateType === 'start') {
-      setStartDate(formattedDate);
-    } else {
-      setEndDate(formattedDate);
-    }
-
-    // Calcular duração em dias quando ambas as datas estiverem preenchidas
+  // Recalcular a duração sempre que as datas mudarem
+  useEffect(() => {
     if (startDate && endDate) {
-      const start = new Date(startDate.split('/').reverse().join('-'));
-      const end = new Date(endDate.split('/').reverse().join('-'));
-      const diffTime = Math.abs(end - start);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setDuration(diffDays);
+      const start = new Date(startDate); // Formato ISO yyyy-mm-dd é compatível
+      const end = new Date(endDate);
+
+      if (!isNaN(start) && !isNaN(end) && start <= end) {
+        const diffTime = end - start;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setDuration(diffDays);
+      } else {
+        setDuration(0); // Define como 0 se as datas forem inválidas
+      }
     }
-  };
+  }, [startDate, endDate]);
 
   return (
     <div className={styles.container}>
@@ -54,19 +52,15 @@ const ConfirmacaoAluguelUsuario = () => {
         <h3 className={styles.subtitulo}>Detalhes da locação</h3>
         <div className={styles.dateContainer}>
           <input
-            type="text"
-            placeholder="Início"
-            maxLength="10"
+            type="date" // Substituir por type="date" para simplificar o uso
             value={startDate}
-            onChange={(e) => handleDateChange('start', e.target.value)}
+            onChange={(e) => setStartDate(e.target.value)}
             className={styles.dateInput}
           />
           <input
-            type="text"
-            placeholder="Final"
-            maxLength="10"
+            type="date" // Substituir por type="date" para simplificar o uso
             value={endDate}
-            onChange={(e) => handleDateChange('end', e.target.value)}
+            onChange={(e) => setEndDate(e.target.value)}
             className={styles.dateInput}
           />
         </div>
@@ -78,7 +72,9 @@ const ConfirmacaoAluguelUsuario = () => {
           </div>
           <div className={styles.detailBox}>
             <label className={styles.label}>Preço total</label>
-            <p className={styles.detailValue}>R$ {/* insira aqui o cálculo do preço baseado na duração */}</p>
+            <p className={styles.detailValue}>
+              R$ {duration * 20} {/* Substituir por cálculo real */}
+            </p>
           </div>
         </div>
       </section>
@@ -99,19 +95,25 @@ const ConfirmacaoAluguelUsuario = () => {
         <h3 className={styles.subtitulo}>Detalhes do Pagamento</h3>
         <div className={styles.paymentOptions}>
           <div
-            className={`${styles.paymentOption} ${selectedOption === 'Cartão de Crédito' ? styles.selected : ''}`}
+            className={`${styles.paymentOption} ${
+              selectedOption === 'Cartão de Crédito' ? styles.selected : ''
+            }`}
             onClick={() => handleOptionSelect('Cartão de Crédito')}
           >
             Cartão de crédito
           </div>
           <div
-            className={`${styles.paymentOption} ${selectedOption === 'Pix' ? styles.selected : ''}`}
+            className={`${styles.paymentOption} ${
+              selectedOption === 'Pix' ? styles.selected : ''
+            }`}
             onClick={() => handleOptionSelect('Pix')}
           >
             Pix
           </div>
           <div
-            className={`${styles.paymentOption} ${selectedOption === 'Pagamento na entrega' ? styles.selected : ''}`}
+            className={`${styles.paymentOption} ${
+              selectedOption === 'Pagamento na entrega' ? styles.selected : ''
+            }`}
             onClick={() => handleOptionSelect('Pagamento na entrega')}
           >
             Pagamento na entrega
